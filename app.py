@@ -335,23 +335,47 @@ def edit_product(product_id):
 
 
 
-    return render_template('edit_product.html', product=product)
+        return render_template('edit_product.html', product=product)
 
 
 
+    
 
 
 
-
-if __name__ == '__main__':
-
-
-
-    init_db() # Initialize database before running the app
+    @app.route('/products/delete/<int:product_id>', methods=['POST'])
 
 
 
-    app.run(debug=True)
+    def delete_product(product_id):
+
+
+
+        product_repo.delete_product(product_id)
+
+
+
+        return redirect(url_for('list_products'))
+
+
+
+    
+
+
+
+    if __name__ == '__main__':
+
+
+
+        init_db() # Initialize database before running the app
+
+
+
+        app.run(debug=True)
+
+
+
+    
 
 
 
