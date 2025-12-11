@@ -1,11 +1,19 @@
 import pyodbc
-from flask import Flask, render_template
+import os
+from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/images'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # Cấu hình kết nối SQL Server
 DB_CONFIG = {
-    'server': 'DESKTOP-B4U5OFT\\SQLEXPRESS',
+    'server': 'DESKTOP-B4U5OFT\SQLEXPRESS',
     'database': 'master', # Kết nối tới master để tạo ProductDB nếu chưa có
     'username': 'tronghieu',
     'password': '123456'
@@ -164,43 +172,57 @@ def init_db():
 
 
 @app.route('/')
-
-
 def index():
-
-
     return render_template('index.html')
-
-
-
-
 
 product_repo = ProductRepository()
 
-
-
-
-
 @app.route('/products')
-
 
 def list_products():
 
-
     products = product_repo.get_all_products()
-
 
     return render_template('products.html', products=products)
 
 
 
+@app.route('/products/add', methods=['GET', 'POST'])
+
+def add_product():
+
+    if request.method == 'POST':
+
+        name = request.form['name']
+
+        price = float(request.form['price'])
+
+        image_file = request.files['image']
+
+        image_filename = None
+
+        if image_file and allowed_file(image_file.filename):
+
+            filename = secure_filename(image_file.filename)
+
+            image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            image_filename = filename
+
+        
+
+        new_product = Product(None, name, price, image_filename)
+
+        product_repo.add_product(new_product)
+
+        return redirect(url_for('list_products'))
+
+    return render_template('add_product.html')
+
 
 
 if __name__ == '__main__':
 
-
     init_db() # Initialize database before running the app
 
-
     app.run(debug=True)
-
