@@ -30,6 +30,103 @@ class Product:
         self.price = price
         self.image = image
 
+class ProductRepository:
+    def get_all_products(self):
+        products = []
+        conn = None
+        cursor = None
+        try:
+            conn = db_connect('ProductDB')
+            cursor = conn.cursor()
+            cursor.execute("SELECT Id, Name, Price, Image FROM Products")
+            for row in cursor.fetchall():
+                products.append(Product(row[0], row[1], row[2], row[3]))
+        except Exception as e:
+            print(f"Error getting all products: {e}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+        return products
+
+    def get_product_by_id(self, product_id):
+        product = None
+        conn = None
+        cursor = None
+        try:
+            conn = db_connect('ProductDB')
+            cursor = conn.cursor()
+            cursor.execute("SELECT Id, Name, Price, Image FROM Products WHERE Id = ?", product_id)
+            row = cursor.fetchone()
+            if row:
+                product = Product(row[0], row[1], row[2], row[3])
+        except Exception as e:
+            print(f"Error getting product by id {product_id}: {e}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+        return product
+
+    def add_product(self, product):
+        conn = None
+        cursor = None
+        try:
+            conn = db_connect('ProductDB')
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO Products (Name, Price, Image) VALUES (?, ?, ?)",
+                           product.name, product.price, product.image)
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error adding product: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    def update_product(self, product):
+        conn = None
+        cursor = None
+        try:
+            conn = db_connect('ProductDB')
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Products SET Name = ?, Price = ?, Image = ? WHERE Id = ?",
+                           product.name, product.price, product.image, product.id)
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating product: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    def delete_product(self, product_id):
+        conn = None
+        cursor = None
+        try:
+            conn = db_connect('ProductDB')
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Products WHERE Id = ?", product_id)
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting product: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+
 def init_db():
     conn = None
     cursor = None
