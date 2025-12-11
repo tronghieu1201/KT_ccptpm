@@ -14,15 +14,20 @@ def allowed_file(filename):
 
 # Cấu hình kết nối SQL Server
 DB_CONFIG = {
-    'server': 'DESKTOP-B4U5OFT\\SQLEXPRESS',
-    'database': 'master', # Kết nối tới master để tạo ProductDB nếu chưa có
+    'server': 'DESKTOP-B4U5OFT\SQLEXPRESS',
+    'database': 'master', # Kết nối tới master để tạo KT_j2ee nếu chưa có
     'username': 'tronghieu',
     'password': '123456'
 }
 
 def db_connect(db_name=None):
+    # If no db_name is provided, default to 'KT_j2ee' for CRUD operations
+    current_db = DB_CONFIG['database'] # Store current db name
     if db_name:
         DB_CONFIG['database'] = db_name
+    else:
+        DB_CONFIG['database'] = 'KT_j2ee'
+    
     conn_str = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}} প্রশিক্ষক;"
         f"SERVER={DB_CONFIG['server']};"
@@ -30,7 +35,9 @@ def db_connect(db_name=None):
         f"UID={DB_CONFIG['username']};"
         f"PWD={DB_CONFIG['password']}"
     )
-    return pyodbc.connect(conn_str, autocommit=True)
+    conn = pyodbc.connect(conn_str, autocommit=True)
+    DB_CONFIG['database'] = current_db # Restore original for consistency
+    return conn
 
 class Product:
     def __init__(self, id, name, price, image):
@@ -45,7 +52,7 @@ class ProductRepository:
         conn = None
         cursor = None
         try:
-            conn = db_connect('ProductDB')
+            conn = db_connect('KT_j2ee') # Use KT_j2ee
             cursor = conn.cursor()
             cursor.execute("SELECT Id, Name, Price, Image FROM Products")
             for row in cursor.fetchall():
@@ -64,7 +71,7 @@ class ProductRepository:
         conn = None
         cursor = None
         try:
-            conn = db_connect('ProductDB')
+            conn = db_connect('KT_j2ee') # Use KT_j2ee
             cursor = conn.cursor()
             cursor.execute("SELECT Id, Name, Price, Image FROM Products WHERE Id = ?", product_id)
             row = cursor.fetchone()
@@ -83,7 +90,7 @@ class ProductRepository:
         conn = None
         cursor = None
         try:
-            conn = db_connect('ProductDB')
+            conn = db_connect('KT_j2ee') # Use KT_j2ee
             cursor = conn.cursor()
             cursor.execute("INSERT INTO Products (Name, Price, Image) VALUES (?, ?, ?)",
                            product.name, product.price, product.image)
@@ -102,7 +109,7 @@ class ProductRepository:
         conn = None
         cursor = None
         try:
-            conn = db_connect('ProductDB')
+            conn = db_connect('KT_j2ee') # Use KT_j2ee
             cursor = conn.cursor()
             cursor.execute("UPDATE Products SET Name = ?, Price = ?, Image = ? WHERE Id = ?",
                            product.name, product.price, product.image, product.id)
@@ -121,7 +128,7 @@ class ProductRepository:
         conn = None
         cursor = None
         try:
-            conn = db_connect('ProductDB')
+            conn = db_connect('KT_j2ee') # Use KT_j2ee
             cursor = conn.cursor()
             cursor.execute("DELETE FROM Products WHERE Id = ?", product_id)
             conn.commit()
@@ -135,361 +142,101 @@ class ProductRepository:
             if conn:
                 conn.close()
 
-
 def init_db():
-
-
     conn = None
-
-
     cursor = None
-
-
     print("Attempting to initialize database...") # DEBUG
-
-
     try:
-
-
-        # Connect to master to check/create ProductDB
-
-
+        # Connect to master to check/create KT_j2ee
         conn = db_connect('master')
-
-
         cursor = conn.cursor()
 
-
-
-
-
-        # Check if ProductDB exists, create if not
-
-
-        cursor.execute(f"IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'ProductDB') CREATE DATABASE ProductDB;")
-
-
-        print("ProductDB checked/created.")
-
-
+        # Check if KT_j2ee exists, create if not
+        cursor.execute(f"IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'KT_j2ee') CREATE DATABASE KT_j2ee;")
+        print("KT_j2ee checked/created.")
         cursor.close()
-
-
         conn.close()
 
-
-
-
-
-        # Connect to ProductDB to create Products table
-
-
-        conn = db_connect('ProductDB')
-
-
+        # Connect to KT_j2ee to create Products table
+        conn = db_connect('KT_j2ee') # Use KT_j2ee
         cursor = conn.cursor()
-
-
         cursor.execute("""
-
-
             IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'Products')
-
-
             CREATE TABLE Products (
-
-
                 Id INT PRIMARY KEY IDENTITY(1,1),
-
-
                 Name NVARCHAR(255) NOT NULL,
-
-
                 Price DECIMAL(10, 2) NOT NULL,
-
-
                 Image NVARCHAR(255)
-
-
             );
-
-
         """)
-
-
         print("Products table checked/created.")
-
-
     except Exception as e:
-
-
         print(f"Error initializing database: {e}")
-
-
     finally:
-
-
         if cursor:
-
-
             cursor.close()
-
-
         if conn:
-
-
             conn.close()
 
-
-
-
-
 @app.route('/')
-
-
 def index():
-
-
     return render_template('index.html')
-
-
-
-
 
 product_repo = ProductRepository()
 
-
-
-
-
 @app.route('/products')
-
-
 def list_products():
-
-
     products = product_repo.get_all_products()
-
-
     return render_template('products.html', products=products)
 
-
-
-
-
 @app.route('/products/add', methods=['GET', 'POST'])
-
-
-
-
-
 def add_product():
-
-
-
-
-
     if request.method == 'POST':
-
-
-
-
-
         name = request.form['name']
-
-
-
-
-
         price = float(request.form['price'])
-
-
-
-
-
         image_file = request.files['image']
-
-
-
-
-
         image_filename = None
-
-
-
-
-
         if image_file and allowed_file(image_file.filename):
-
-
-
-
-
             filename = secure_filename(image_file.filename)
-
-
-
-
-
             image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-
-
-
-
             image_filename = filename
-
-
-
-
-
         
-
-
-
-
-
         new_product = Product(None, name, price, image_filename)
-
-
-
-
-
         if product_repo.add_product(new_product):
-
-
-
-
-
             flash('Product added successfully!', 'success')
-
-
-
-
-
         else:
-
-
-
-
-
             flash('Error adding product.', 'error')
-
-
-
-
-
         return redirect(url_for('list_products'))
-
-
-
-
-
     return render_template('add_product.html')
 
-
-
-
-
 @app.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
-
-
 def edit_product(product_id):
-
-
     product = product_repo.get_product_by_id(product_id)
-
-
     if not product:
-
-
         return "Product not found", 404
 
-
-
-
-
     if request.method == 'POST':
-
-
         product.name = request.form['name']
-
-
         product.price = float(request.form['price'])
-
-
         
-
-
         image_file = request.files['image']
-
-
         if image_file and allowed_file(image_file.filename):
-
-
             filename = secure_filename(image_file.filename)
-
-
             image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-
             product.image = filename
-
-
         elif 'image' not in request.files: # if no new image is uploaded, retain old image
-
-
             pass # product.image already holds the old image filename
 
-
-
-
-
         product_repo.update_product(product)
-
-
         return redirect(url_for('list_products'))
-
-
     return render_template('edit_product.html', product=product)
 
-
-
-
-
 @app.route('/products/delete/<int:product_id>', methods=['POST'])
-
-
 def delete_product(product_id):
-
-
     product_repo.delete_product(product_id)
-
-
     return redirect(url_for('list_products'))
 
-
-
-
-
 if __name__ == '__main__':
-
-
     init_db() # Initialize database before running the app
-
-
     print("Flask app about to run...") # DEBUG
-
-
     app.run(debug=True)
-
-
-
-
-
-
-    
-
-
-
-
