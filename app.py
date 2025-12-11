@@ -28,15 +28,25 @@ def db_connect(db_name=None):
     else:
         DB_CONFIG['database'] = 'KT_j2ee'
     
+    # Use raw string for server name to handle backslashes correctly
+    server_name = r"{}".format(DB_CONFIG['server'])
+
     conn_str = (
-        f"DRIVER={{ODBC Driver 17 for SQL Server}} প্রশিক্ষক;"
-        f"SERVER={DB_CONFIG['server']};"
-        f"DATABASE={DB_CONFIG['database']};"
-        f"UID={DB_CONFIG['username']};"
+        f"DRIVER={{ODBC Driver 17 for SQL Server}};
+        f"SERVER={server_name};
+        f"DATABASE={DB_CONFIG['database']};
+        f"UID={DB_CONFIG['username']};
         f"PWD={DB_CONFIG['password']}"
     )
-    conn = pyodbc.connect(conn_str, autocommit=True)
-    DB_CONFIG['database'] = current_db # Restore original for consistency
+    conn = None
+    try:
+        conn = pyodbc.connect(conn_str, autocommit=True)
+        print(f"Successfully connected to database: {DB_CONFIG['database']}") # DEBUG
+    except Exception as e:
+        print(f"Error connecting to database {DB_CONFIG['database']}: {e}") # DEBUG
+        # Optionally, re-raise the exception or handle it more gracefully
+    finally:
+        DB_CONFIG['database'] = current_db # Restore original for consistency
     return conn
 
 class Product:
