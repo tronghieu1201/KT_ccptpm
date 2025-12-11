@@ -8,6 +8,15 @@
 </head>
 <body>
     <h1>Product List</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <a href="/products/add">Add New Product</a>
     <table border="1">
         <thead>

@@ -1,9 +1,10 @@
 import pyodbc
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, get_flashed_messages
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key_here' # Replace with a strong secret key
 app.config['UPLOAD_FOLDER'] = 'static/images'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -279,46 +280,109 @@ def list_products():
 @app.route('/products/add', methods=['GET', 'POST'])
 
 
+
+
+
 def add_product():
+
+
+
 
 
     if request.method == 'POST':
 
 
+
+
+
         name = request.form['name']
+
+
+
 
 
         price = float(request.form['price'])
 
 
+
+
+
         image_file = request.files['image']
+
+
+
 
 
         image_filename = None
 
 
+
+
+
         if image_file and allowed_file(image_file.filename):
+
+
+
 
 
             filename = secure_filename(image_file.filename)
 
 
+
+
+
             image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+
+
 
 
             image_filename = filename
 
 
+
+
+
         
+
+
+
 
 
         new_product = Product(None, name, price, image_filename)
 
 
-        product_repo.add_product(new_product)
+
+
+
+        if product_repo.add_product(new_product):
+
+
+
+
+
+            flash('Product added successfully!', 'success')
+
+
+
+
+
+        else:
+
+
+
+
+
+            flash('Error adding product.', 'error')
+
+
+
 
 
         return redirect(url_for('list_products'))
+
+
+
 
 
     return render_template('add_product.html')
