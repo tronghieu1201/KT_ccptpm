@@ -189,40 +189,170 @@ def list_products():
 
 @app.route('/products/add', methods=['GET', 'POST'])
 
+
+
 def add_product():
+
+
 
     if request.method == 'POST':
 
+
+
         name = request.form['name']
+
+
 
         price = float(request.form['price'])
 
+
+
         image_file = request.files['image']
+
+
 
         image_filename = None
 
+
+
         if image_file and allowed_file(image_file.filename):
+
+
 
             filename = secure_filename(image_file.filename)
 
+
+
             image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+
 
             image_filename = filename
 
+
+
         
+
+
 
         new_product = Product(None, name, price, image_filename)
 
+
+
         product_repo.add_product(new_product)
 
+
+
         return redirect(url_for('list_products'))
+
+
 
     return render_template('add_product.html')
 
 
 
+
+
+
+
+@app.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
+
+
+
+def edit_product(product_id):
+
+
+
+    product = product_repo.get_product_by_id(product_id)
+
+
+
+    if not product:
+
+
+
+        return "Product not found", 404
+
+
+
+
+
+
+
+    if request.method == 'POST':
+
+
+
+        product.name = request.form['name']
+
+
+
+        product.price = float(request.form['price'])
+
+
+
+        
+
+
+
+        image_file = request.files['image']
+
+
+
+        if image_file and allowed_file(image_file.filename):
+
+
+
+            filename = secure_filename(image_file.filename)
+
+
+
+            image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+
+
+            product.image = filename
+
+
+
+        elif 'image' not in request.files: # if no new image is uploaded, retain old image
+
+
+
+            pass # product.image already holds the old image filename
+
+
+
+
+
+
+
+        product_repo.update_product(product)
+
+
+
+        return redirect(url_for('list_products'))
+
+
+
+    return render_template('edit_product.html', product=product)
+
+
+
+
+
+
+
 if __name__ == '__main__':
+
+
 
     init_db() # Initialize database before running the app
 
+
+
     app.run(debug=True)
+
+
+
+
