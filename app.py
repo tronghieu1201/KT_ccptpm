@@ -136,115 +136,189 @@ class ProductRepository:
 
 
 def init_db():
+
+
     conn = None
+
+
     cursor = None
+
+
+    print("Attempting to initialize database...") # DEBUG
+
+
     try:
+
+
         # Connect to master to check/create ProductDB
+
+
         conn = db_connect('master')
+
+
         cursor = conn.cursor()
+
+
+
+
 
         # Check if ProductDB exists, create if not
+
+
         cursor.execute(f"IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'ProductDB') CREATE DATABASE ProductDB;")
+
+
         print("ProductDB checked/created.")
+
+
         cursor.close()
+
+
         conn.close()
 
+
+
+
+
         # Connect to ProductDB to create Products table
+
+
         conn = db_connect('ProductDB')
+
+
         cursor = conn.cursor()
+
+
         cursor.execute("""
+
+
             IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'Products')
+
+
             CREATE TABLE Products (
+
+
                 Id INT PRIMARY KEY IDENTITY(1,1),
+
+
                 Name NVARCHAR(255) NOT NULL,
+
+
                 Price DECIMAL(10, 2) NOT NULL,
+
+
                 Image NVARCHAR(255)
+
+
             );
+
+
         """)
+
+
         print("Products table checked/created.")
+
+
     except Exception as e:
+
+
         print(f"Error initializing database: {e}")
+
+
     finally:
+
+
         if cursor:
+
+
             cursor.close()
+
+
         if conn:
+
+
             conn.close()
 
 
+
+
+
 @app.route('/')
+
+
 def index():
+
+
     return render_template('index.html')
+
+
+
+
 
 product_repo = ProductRepository()
 
+
+
+
+
 @app.route('/products')
+
 
 def list_products():
 
+
     products = product_repo.get_all_products()
 
+
     return render_template('products.html', products=products)
+
+
 
 
 
 @app.route('/products/add', methods=['GET', 'POST'])
 
 
-
 def add_product():
-
 
 
     if request.method == 'POST':
 
 
-
         name = request.form['name']
-
 
 
         price = float(request.form['price'])
 
 
-
         image_file = request.files['image']
-
 
 
         image_filename = None
 
 
-
         if image_file and allowed_file(image_file.filename):
-
 
 
             filename = secure_filename(image_file.filename)
 
 
-
             image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
 
 
             image_filename = filename
 
 
-
         
-
 
 
         new_product = Product(None, name, price, image_filename)
 
 
-
         product_repo.add_product(new_product)
 
 
-
         return redirect(url_for('list_products'))
-
 
 
     return render_template('add_product.html')
@@ -253,22 +327,16 @@ def add_product():
 
 
 
-
-
 @app.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
-
 
 
 def edit_product(product_id):
 
 
-
     product = product_repo.get_product_by_id(product_id)
 
 
-
     if not product:
-
 
 
         return "Product not found", 404
@@ -277,46 +345,34 @@ def edit_product(product_id):
 
 
 
-
-
     if request.method == 'POST':
-
 
 
         product.name = request.form['name']
 
 
-
         product.price = float(request.form['price'])
-
 
 
         
 
 
-
         image_file = request.files['image']
-
 
 
         if image_file and allowed_file(image_file.filename):
 
 
-
             filename = secure_filename(image_file.filename)
-
 
 
             image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 
-
             product.image = filename
 
 
-
         elif 'image' not in request.files: # if no new image is uploaded, retain old image
-
 
 
             pass # product.image already holds the old image filename
@@ -325,53 +381,46 @@ def edit_product(product_id):
 
 
 
-
-
         product_repo.update_product(product)
 
 
-
         return redirect(url_for('list_products'))
 
 
-
-        return render_template('edit_product.html', product=product)
-
-
-
-    
+    return render_template('edit_product.html', product=product)
 
 
 
-    @app.route('/products/delete/<int:product_id>', methods=['POST'])
+
+
+@app.route('/products/delete/<int:product_id>', methods=['POST'])
+
+
+def delete_product(product_id):
+
+
+    product_repo.delete_product(product_id)
+
+
+    return redirect(url_for('list_products'))
 
 
 
-    def delete_product(product_id):
+
+
+if __name__ == '__main__':
+
+
+    init_db() # Initialize database before running the app
+
+
+    print("Flask app about to run...") # DEBUG
+
+
+    app.run(debug=True)
 
 
 
-        product_repo.delete_product(product_id)
-
-
-
-        return redirect(url_for('list_products'))
-
-
-
-    
-
-
-
-    if __name__ == '__main__':
-
-
-
-        init_db() # Initialize database before running the app
-
-
-
-        app.run(debug=True)
 
 
 
