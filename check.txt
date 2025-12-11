@@ -1,8 +1,0 @@
-(venv) (base) PS C:\Users\giapt\OneDrive\Máy tính\KT_ccptpm> py .\app.py
-C:\Users\giapt\OneDrive\Máy tính\KT_ccptpm\app.py:17: SyntaxWarning: invalid escape sequence '\S'
-  'server': 'DESKTOP-B4U5OFT\SQLEXPRESS',
-  File "C:\Users\giapt\OneDrive\Máy tính\KT_ccptpm\app.py", line 35
-    f"DRIVER={{ODBC Driver 17 for SQL Server}};
-    ^
-SyntaxError: unterminated f-string literal (detected at line 35)
-(venv) (base) PS C:\Users\giapt\OneDrive\Máy tính\KT_ccptpm> 
