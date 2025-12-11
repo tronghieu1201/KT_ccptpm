@@ -8,6 +8,10 @@ app.config['SECRET_KEY'] = 'your_secret_key_here' # Replace with a strong secret
 app.config['UPLOAD_FOLDER'] = 'static/images'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
+@app.template_filter('format_currency')
+def format_currency_filter(value):
+    return f"{value:,.0f} VND".replace(",", ".")
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']

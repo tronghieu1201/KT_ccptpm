@@ -39,7 +39,7 @@
                     <tr>
                         <td>{{ product.id }}</td>
                         <td>{{ product.name }}</td>
-                        <td>{{ product.price }}</td>
+                        <td>{{ product.price | format_currency }}</td>
                         <td>
                             {% if product.image %}
                                 <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 100px;">
