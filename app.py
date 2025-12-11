@@ -164,9 +164,43 @@ def init_db():
 
 
 @app.route('/')
+
+
 def index():
+
+
     return render_template('index.html')
 
+
+
+
+
+product_repo = ProductRepository()
+
+
+
+
+
+@app.route('/products')
+
+
+def list_products():
+
+
+    products = product_repo.get_all_products()
+
+
+    return render_template('products.html', products=products)
+
+
+
+
+
 if __name__ == '__main__':
+
+
     init_db() # Initialize database before running the app
+
+
     app.run(debug=True)
+
