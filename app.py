@@ -13,7 +13,7 @@ def allowed_file(filename):
 
 # Cấu hình kết nối SQL Server
 DB_CONFIG = {
-    'server': 'DESKTOP-B4U5OFT\SQLEXPRESS',
+    'server': 'DESKTOP-B4U5OFT\\SQLEXPRESS',
     'database': 'master', # Kết nối tới master để tạo ProductDB nếu chưa có
     'username': 'tronghieu',
     'password': '123456'
