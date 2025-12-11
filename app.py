@@ -14,7 +14,7 @@ def allowed_file(filename):
 
 # Cấu hình kết nối SQL Server
 DB_CONFIG = {
-    'server': 'DESKTOP-B4U5OFT\SQLEXPRESS',
+    'server': r'DESKTOP-B4U5OFT\SQLEXPRESS', # Using raw string to handle backslashes
     'database': 'master', # Kết nối tới master để tạo KT_j2ee nếu chưa có
     'username': 'tronghieu',
     'password': '123456'
@@ -29,13 +29,14 @@ def db_connect(db_name=None):
         DB_CONFIG['database'] = 'KT_j2ee'
     
     # Use raw string for server name to handle backslashes correctly
-    server_name = r"{}".format(DB_CONFIG['server'])
+    server_name = DB_CONFIG['server']
 
+    driver = "{ODBC Driver 17 for SQL Server}"
     conn_str = (
-        f"DRIVER={{ODBC Driver 17 for SQL Server}};
-        f"SERVER={server_name};
-        f"DATABASE={DB_CONFIG['database']};
-        f"UID={DB_CONFIG['username']};
+        f"DRIVER={driver};"
+        f"SERVER={server_name};"
+        f"DATABASE={DB_CONFIG['database']};"
+        f"UID={DB_CONFIG['username']};"
         f"PWD={DB_CONFIG['password']}"
     )
     conn = None
